@@ -6,15 +6,19 @@ const fs = require("fs");
 const app = express();
 const dotenv = require("dotenv").config();
 
-
-
 // Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://file-uplods-frontend.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true,
+  })
+);
 app.use("/uploads", express.static(uploadDir));
 
 const storage = multer.diskStorage({
