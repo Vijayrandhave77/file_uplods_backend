@@ -6,7 +6,6 @@ const fs = require("fs");
 const app = express();
 const dotenv = require("dotenv").config();
 
-// Ensure uploads folder exists
 const uploadDir = path.join(__dirname, "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
@@ -14,11 +13,12 @@ if (!fs.existsSync(uploadDir)) {
 
 app.use(
   cors({
-    origin: "https://file-uplods-frontend.vercel.app",
-    methods: ["GET", "POST"],
+    origin: "*", // ✅ Replace with your frontend domain
+    methods: ["GET", "POST", "DELETE"],
     credentials: true,
   })
 );
+
 app.use("/uploads", express.static(uploadDir));
 
 const storage = multer.diskStorage({
@@ -32,7 +32,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Upload route
+// ✅ Upload a file
 app.post("/upload", upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).send({ message: "No file uploaded" });
 
@@ -45,7 +45,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
   });
 });
 
-// ✅ New: Get all uploaded files
+// ✅ Get all uploaded files
 app.get("/files", (req, res) => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) return res.status(500).json({ message: "Error reading files" });
@@ -56,6 +56,21 @@ app.get("/files", (req, res) => {
     }));
 
     res.json(fileList);
+  });
+});
+
+// ✅ Delete a file
+app.delete("/delete/:filename", (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(uploadDir, filename);
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error("Error deleting file:", err);
+      return res.status(500).json({ message: "Error deleting file" });
+    }
+
+    res.json({ message: "File deleted successfully", filename });
   });
 });
 
